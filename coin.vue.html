@@ -5,13 +5,49 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Moedas Digitais em VUE</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/npm/vuetify@1.4.0/dist/vuetify.min.css"
+    />
   </head>
   <body>
     <div id="app">
-      <div>{{title}}</div>
+      <header>
+        <div class="container">
+          <a href="https://github.com/uzanttoli" target="_blank">{{title}}</a>
+          <div id="dadosInput">
+            Insira a QTDE:
+            <input
+              id="dados"
+              type="number"
+              v-model="top"
+              onkeypress="return event.charCode >= 48"
+              min="1"
+            />
+            <v-btn
+              rounded
+              dark
+              class="black white--text"
+              @click="atualizarListar()"
+              :loading="loading"
+              elevation="2"
+              :disabled="loading"
+              >Atualizar</v-btn
+            >
+          </div>
+        </div>
+      </header>
+      <hr />
       <div id="coin"></div>
+      <footer>
+        {{data()}} &copy;
+        <a href="https://github.com/uzanttoli" target="_blank">UZANTTOLI</a>
+      </footer>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@1.4.0/dist/vuetify.min.js"></script>
     <script type="text/javascript">
       new Vue({
         el: "#app",
@@ -22,6 +58,8 @@
           },
         },
         data: () => ({
+          top: "",
+          loading: false,
         }),
         computed: {
           apikey() {
@@ -37,7 +75,19 @@
           },
         },
         methods: {
+          data() {
+            let data = new Date();
+            let dataFormatada = data.getFullYear();
+            return dataFormatada;
+          },
+          isValid() {
+            return this.top;
+          },
+          atualizarListar() {
+            this.loadCoind();
+          },
           loadCoind() {
+            this.loading = true;
             fetch(this.urlData + this.apikey.key)
               .then((response) => {
                 if (!response.ok) {
@@ -50,29 +100,40 @@
               .then((element) => {
                 console.log(element);
                 var dados = "";
-                for (i = 0; i < 10; i++) {
+                for (i = 0; i < this.top; i++) {
                   dados =
                     dados +
                     `
-                    <div class="media">
-                        <img src="coin.jpg" class="align-self-center mr-3" alt="coin" width="100" height="60">
-                        <div class="media-body">
-                        <h5 class="mt-2">${element.data[i].name}</h5>
-                        <p>${element.data[i].symbol}</p>
-                        <p>${element.data[i].last_historical_data}</p>
+                        <div id="container">
+                        <p style="margin-top: 4px; margin-rigth: 2px">
+                        <img src="coin.jpg" alt="coin" width="100" align="left">
+                        </p>
+                        <span>
+                        <h2>${element.data[i].name}
+                        </h2>
+                        <span style="color: red">${
+                          element.data[i].symbol
+                        }</span> |
+                        ${element.data[i].last_historical_data
+                          .substr(0, 10)
+                          .split("-")
+                          .reverse()
+                          .join("/")}
+                        |
+                        <span>TOP: </span>${element.data[i].rank + "ª"}
+                        </span>
                         </div>
-                    </div>
-            `;
+                  `;
                   document.getElementById("coin").innerHTML = dados;
                 }
+              })
+              .then(() => {
+                this.loading = false;
               })
               .catch((error) => {
                 console.error(error.message);
               });
           },
-        },
-        created() {
-          return this.loadCoind();
         },
       });
     </script>
